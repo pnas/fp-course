@@ -89,8 +89,6 @@ bindOptional f (Full a) = f a
 (<+>) z y = case z of Full r -> Full r
                       Empty -> y
 
---  error "todo: Course.Optional#(<+>)"
-
 -- | Replaces the Full and Empty constructors in an optional.
 --
 -- >>> optional (+1) 0 (Full 8)

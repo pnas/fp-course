@@ -3,9 +3,8 @@
 
 module Course.StateTTest where
 
-import qualified Prelude               as P ((++), String)
+import qualified Prelude               as P (String, (++))
 
-import           Test.QuickCheck       (forAllShrink)
 import           Test.Tasty            (TestTree, testGroup)
 import           Test.Tasty.HUnit      (testCase, (@?=))
 import           Test.Tasty.QuickCheck (testProperty)
@@ -14,14 +13,16 @@ import           Course.Applicative    (pure, (<*>))
 import           Course.Core
 import           Course.ExactlyOne     (ExactlyOne (..))
 import           Course.Functor        ((<$>))
+import           Course.Gens           (forAllLists)
 import           Course.List           (List (..), flatMap, listh)
-import           Course.ListTest       (genIntegerList, shrinkList)
 import           Course.Monad          ((=<<), (>>=))
 import           Course.Optional       (Optional (..))
 import           Course.State          (put, runState)
-import           Course.StateT         (OptionalT (..), StateT (..), distinct',
-                                        distinctF, getT, putT, runOptionalT,
-                                        runState', state', log1, distinctG, Logger (..))
+import           Course.StateT         (Logger (..), OptionalT (..),
+                                        StateT (..), distinct', distinctF,
+                                        distinctG, getT, log1, putT,
+                                        runOptionalT, runState', state',
+                                        execT, exec', evalT, eval')
 
 test_StateT :: TestTree
 test_StateT =
@@ -31,6 +32,10 @@ test_StateT =
   , monadTest
   , state'Test
   , runState'Test
+  , execTTest
+  , exec'Test
+  , evalTTest
+  , eval'Test
   , getTTest
   , putTTest
   , distinct'Test
@@ -86,6 +91,26 @@ runState'Test =
   testCase "runState'" $
     runState' (state' $ runState $ put 1) 0 @?= ((),1)
 
+execTTest :: TestTree
+execTTest =
+  testCase "execTTest" $
+    execT (StateT $ \s -> Full ((), s + 1)) 2 @?= Full 3
+
+exec'Test :: TestTree
+exec'Test =
+  testCase "exec'Test" $
+    exec' (state' $ \s -> ((), s + 1)) 2 @?= 3
+
+evalTTest :: TestTree
+evalTTest =
+  testCase "evalTTest" $
+    evalT (StateT $ \s -> Full (even s, s + 1)) 2 @?= Full True
+
+eval'Test :: TestTree
+eval'Test =
+  testCase "eval'Test" $
+    eval' (state' $ \s -> (even s, s + 1)) 5 @?= False
+
 getTTest :: TestTree
 getTTest =
   testCase "getTTest" $
@@ -99,8 +124,7 @@ putTTest =
 distinct'Test :: TestTree
 distinct'Test =
   testProperty "distinct'" $
-    forAllShrink genIntegerList shrinkList (\xs ->
-      distinct' xs == distinct' (flatMap (\x -> x :. x :. Nil) xs))
+    forAllLists (\xs -> distinct' xs == distinct' (flatMap (\x -> x :. x :. Nil) xs))
 
 distinctFTest :: TestTree
 distinctFTest =
@@ -116,9 +140,29 @@ optionalTFunctorTest =
 
 optionalTApplicativeTest :: TestTree
 optionalTApplicativeTest =
-  testCase "(<*>) for OptionalT" $
-    let ot = (OptionalT (Full (+1) :. Full (+2) :. Nil)) <*> OptionalT (Full 1 :. Empty :. Nil)
-     in runOptionalT ot @?= (Full 2:.Empty:.Full 3:.Empty:.Nil)
+  testGroup "(<*>) for OptionalT" [
+    testCase "one" $
+      let ot = (OptionalT Nil <*> OptionalT (Full 1 :. Full 2 :. Nil))
+       in runOptionalT ot @?= (Nil :: List (Optional Int))
+  , testCase "two" $
+      let ot = OptionalT (Full (+1) :. Full (+2) :. Nil) <*> OptionalT Nil
+       in runOptionalT ot @?= (Nil :: List (Optional Int))
+  , testCase "three" $
+      let ot = OptionalT (Empty :. Nil) <*> OptionalT (Empty :. Nil)
+       in runOptionalT ot @?= (Empty :. Nil :: List (Optional Int))
+  , testCase "four" $
+      let ot = OptionalT (Full (+1) :. Empty :. Nil) <*> OptionalT (Empty :. Nil)
+       in runOptionalT ot @?= (Empty :. Empty :. Nil :: List (Optional Int))
+  , testCase "five" $
+      let ot = OptionalT (Empty :. Nil) <*> OptionalT (Full 1 :. Full 2 :. Nil)
+       in runOptionalT ot @?= (Empty :. Nil :: List (Optional Int))
+  , testCase "six" $
+      let ot = OptionalT (Full (+1) :. Empty :. Nil) <*> OptionalT (Full 1 :. Full 2 :. Nil)
+       in runOptionalT ot @?= (Full 2 :. Full 3 :. Empty :. Nil)
+  , testCase "seven" $
+      let ot = OptionalT (Full (+1) :. Full (+2) :. Nil) <*> OptionalT (Full 1 :. Empty :. Nil)
+       in runOptionalT ot @?= (Full 2 :. Empty :. Full 3 :. Empty :. Nil)
+  ]
 
 optionalTMonadTest :: TestTree
 optionalTMonadTest =
