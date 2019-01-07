@@ -38,8 +38,8 @@ exec ::
   State s a
   -> s
   -> s
-exec =
-  error "todo: Course.State#exec"
+exec r p = snd ( runState r p )
+  -- error "todo: Course.State#exec"
 
 -- | Run the `State` seeded with `s` and retrieve the resulting value.
 --
@@ -48,8 +48,8 @@ eval ::
   State s a
   -> s
   -> a
-eval =
-  error "todo: Course.State#eval"
+eval r p = fst ( runState r p )
+  -- error "todo: Course.State#eval"
 
 -- | A `State` where the state also distributes into the produced value.
 --
@@ -57,8 +57,8 @@ eval =
 -- (0,0)
 get ::
   State s s
-get =
-  error "todo: Course.State#get"
+get = State $ \s -> (s, s)
+  -- error "todo: Course.State#get"
 
 -- | A `State` where the resulting state is seeded with the given value.
 --
@@ -67,8 +67,9 @@ get =
 put ::
   s
   -> State s ()
-put =
-  error "todo: Course.State#put"
+put newState = State $ \_ -> ((), newState)
+
+  -- error "todo: Course.State#put"
 
 -- | Implement the `Functor` instance for `State s`.
 --
