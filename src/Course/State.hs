@@ -80,8 +80,9 @@ instance Functor (State s) where
     (a -> b)
     -> State s a
     -> State s b
-  (<$>) =
-    error "todo: Course.State#(<$>)"
+  (<$>) f g = State $ \x -> (f ( eval g x ) , exec g x )
+  
+    -- error "todo: Course.State#(<$>)"
 
 -- | Implement the `Applicative` instance for `State s`.
 --
@@ -98,14 +99,15 @@ instance Applicative (State s) where
   pure ::
     a
     -> State s a
-  pure =
-    error "todo: Course.State pure#instance (State s)"
+  pure t = State $ \x -> (t , x)
+    -- error "todo: Course.State pure#instance (State s)"
   (<*>) ::
     State s (a -> b)
     -> State s a
     -> State s b
-  (<*>) =
-    error "todo: Course.State (<*>)#instance (State s)"
+  (<*>) f g = State $ \x -> ( eval (( eval f x ) <$> g ) x, exec f (exec g x) )
+
+-- error "todo: Course.State (<*>)#instance (State s)"
 
 -- | Implement the `Bind` instance for `State s`.
 --
@@ -119,8 +121,15 @@ instance Monad (State s) where
     (a -> State s b)
     -> State s a
     -> State s b
-  (=<<) =
-    error "todo: Course.State (=<<)#instance (State s)"
+  (=<<) k p = q where
+    p' = runState p        -- p' :: s -> (a, s)
+    k' = runState . k      -- k' :: a -> s -> (b, s)
+    q' s0 = (y, s2) where  -- q' :: s -> (b, s)
+        (x, s1) = p' s0    -- (x, s1) :: (a, s)
+        (y, s2) = k' x s1  -- (y, s2) :: (b, s)
+    q = State q'
+
+-- error "todo: Course.State (=<<)#instance (State s)"
 
 -- | Find the first element in a `List` that satisfies a given predicate.
 -- It is possible that no element is found, hence an `Optional` result.
@@ -141,7 +150,7 @@ findM ::
   (a -> f Bool)
   -> List a
   -> f (Optional a)
-findM =
+findM p ( h :. t ) =
   error "todo: Course.State#findM"
 
 -- | Find the first element in a `List` that repeats.
