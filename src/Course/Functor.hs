@@ -44,7 +44,7 @@ instance Functor ExactlyOne where
   (<$>) f (ExactlyOne x) = ExactlyOne (f x)
 
 
---    error "todo: Course.Functor (<$>)#instance ExactlyOne"
+  --  error "todo: Course.Functor (<$>)#instance ExactlyOne"
 -- | Maps a function on the List functor.
 --
 -- >>> (+1) <$> Nil
