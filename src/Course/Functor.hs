@@ -91,6 +91,8 @@ instance Functor ((->) t) where
     -> ((->) t a)
     -> ((->) t b)
   (<$>) = (.)
+  -- (<$>) z g = \ x -> z ( g x)
+    --z . g
 
 -- error "todo: Course.Functor (<$>)#((->) t)"
 

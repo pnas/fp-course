@@ -133,7 +133,8 @@ instance Applicative ((->) t) where
     -- error "todo: Course.Applicative pure#((->) t)"
 
   (<*>) ::
-    ((->) t (a -> b))
+    -- ((->) t (a -> b))
+    (t -> a -> b)
     -> ((->) t a)
     -> ((->) t b)
   (<*>) f g = \r -> f r (g r)
