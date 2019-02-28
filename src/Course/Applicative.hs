@@ -70,6 +70,8 @@ instance Applicative List where
     -> List a
   pure a = ( a :. Nil )
     -- error "todo: Course.Applicative pure#instance List"
+  
+  -- TODO implement with flatMap 
   (<*>) ::
     List (a -> b)
     -> List a
@@ -388,6 +390,8 @@ replicateA n z = sequence $ replicate n z
 --
 -- >>> filtering (const $ True :. True :.  Nil) (1 :. 2 :. 3 :. Nil)
 -- [[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3]]
+--
+-- TODO check dlivas 3 diff filtering implementations 
 --
 filtering ::
   Applicative f =>

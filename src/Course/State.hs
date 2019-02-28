@@ -95,6 +95,8 @@ instance Functor (State s) where
 -- >>> import qualified Prelude as P
 -- >>> runState (State (\s -> ((+3), s P.++ ["apple"])) <*> State (\s -> (7, s P.++ ["banana"]))) []
 -- (10,["apple","banana"])
+
+-- TODO check dlivas implementation with runState
 instance Applicative (State s) where
   pure ::
     a
