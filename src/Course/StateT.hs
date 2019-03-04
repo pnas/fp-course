@@ -222,12 +222,16 @@ distinct' z = eval (filtering (\x -> State $ \s -> (S.notMember x s, S.insert x 
 -- >>> distinctF $ listh [1,2,3,2,1,101]
 -- Empty
 distinctF ::
-  Ord a =>
+  (Ord a , Num a) =>
   List a
   -> Optional (List a)
-distinctF z = error "todo: Course.StateT#distinctF"
-  
-  -- eval (filtering (\x -> StateT $ \s -> if x > 100 then Empty else Full (S.notMember x s, S.insert x s)) z) S.empty
+distinctF z = evalT (filtering (\x  -> StateT $ \s -> 
+  if (x > 100)
+    then Empty 
+    else Full (S.notMember x s, S.insert x s)) z) S.empty
+
+  -- error "todo: Course.StateT#distinctF"  
+  -- 
 
 -- | An `OptionalT` is a functor of an `Optional` value.
 data OptionalT f a =

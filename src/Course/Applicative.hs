@@ -141,7 +141,7 @@ instance Applicative ((->) t) where
     -> ((->) t b)
   (<*>) f g = \r -> f r (g r)
   
-    -- error "todo: Course.Apply (<*>)#instance ((->) t)"
+-- error "todo: Course.Apply (<*>)#instance ((->) t)"
 
 -- | Apply a binary function in the environment.
 --
@@ -401,7 +401,7 @@ filtering ::
 filtering f = foldRight (\ x acc ->
                  lift2 (\ istrue as -> if istrue then x :. as else as) (f x) acc)
                       (pure Nil)
-  -- error "todo: Course.Applicative#filtering"
+-- error "todo: Course.Applicative#filtering"
 
 -----------------------
 -- SUPPORT LIBRARIES --
