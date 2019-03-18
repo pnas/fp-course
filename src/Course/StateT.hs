@@ -222,11 +222,7 @@ distinct' z = eval (filtering (\x -> State $ \s -> (S.notMember x s, S.insert x 
 -- >>> distinctF $ listh [1,2,3,2,1,101]
 -- Empty
 distinctF ::
-<<<<<<< HEAD
-  (Ord a , Num a) =>
-=======
   (Ord a, Num a) =>
->>>>>>> d82d69753bf7e8eac7c1d22733d688807c2b2065
   List a
   -> Optional (List a)
 distinctF z = evalT (filtering (\x  -> StateT $ \s -> 
