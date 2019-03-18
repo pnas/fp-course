@@ -249,8 +249,9 @@ instance Functor f => Functor (OptionalT f) where
     (a -> b)
     -> OptionalT f a
     -> OptionalT f b
-  (<$>) =
-    error "todo: Course.StateT (<$>)#instance (OptionalT f)"
+  (<$>) t (OptionalT oft) = OptionalT $ lift1 (\x -> t x) <$> oft
+
+--  error "todo: Course.StateT (<$>)#instance (OptionalT f)"
 
 -- | Implement the `Applicative` instance for `OptionalT f` given a Monad f.
 --
@@ -280,15 +281,30 @@ instance Monad f => Applicative (OptionalT f) where
   pure ::
     a
     -> OptionalT f a
-  pure =
-    error "todo: Course.StateT pure#instance (OptionalT f)"
+  pure z = OptionalT $ lift0 (pure z)  -- f (Optional a)
+    -- error "todo: Course.StateT pure#instance (OptionalT f)"
 
   (<*>) ::
     OptionalT f (a -> b)
     -> OptionalT f a
     -> OptionalT f b
-  (<*>) =
-    error "todo: Course.StateT (<*>)#instance (OptionalT f)"
+  (<*>) (OptionalT e) (OptionalT c) = OptionalT $  do
+      r <- e
+      s <- c
+      onFull (\z -> pure (r <*> (lift0 z) )) s
+      -- pure (r <*> s)
+      --- alt1 solution --- correct
+      -- OptionalT f <*> OptionalT a =
+      --   OptionalT (lift2 (<*>) f a)
+
+  -- alt2 solution wrong
+  -- (<*>) e c = do 
+  --   r <- e
+  --   w <- c
+  --   let zz = r w
+  --   OptionalT $ lift0 (pure zz)
+
+-- error "todo: Course.StateT (<*>)#instance (OptionalT f)"
 
 -- | Implement the `Monad` instance for `OptionalT f` given a Monad f.
 --
@@ -299,8 +315,18 @@ instance Monad f => Monad (OptionalT f) where
     (a -> OptionalT f b)
     -> OptionalT f a
     -> OptionalT f b
-  (=<<) =
-    error "todo: Course.StateT (=<<)#instance (OptionalT f)"
+  (=<<) z (OptionalT y) = OptionalT $ do 
+    r <- y
+    case r of
+      Empty -> pure Empty
+      Full e -> runOptionalT (z e)
+
+    -- -- other solution -- --
+    -- OptionalT ((\o -> case o of
+    -- Empty -> pure Empty
+    -- Full a -> runOptionalT (z a)) =<< y)
+
+-- error "todo: Course.StateT (=<<)#instance (OptionalT f)"
 
 -- | A `Logger` is a pair of a list of log values (`[l]`) and an arbitrary value (`a`).
 data Logger l a =
@@ -316,8 +342,9 @@ instance Functor (Logger l) where
     (a -> b)
     -> Logger l a
     -> Logger l b
-  (<$>) =
-    error "todo: Course.StateT (<$>)#instance (Logger l)"
+  (<$>) f (Logger lst ab) = Logger lst (f ab)
+
+    -- error "todo: Course.StateT (<$>)#instance (Logger l)"
 
 -- | Implement the `Applicative` instance for `Logger`.
 --
@@ -330,15 +357,15 @@ instance Applicative (Logger l) where
   pure ::
     a
     -> Logger l a
-  pure =
-    error "todo: Course.StateT pure#instance (Logger l)"
+  pure z = Logger Nil z
+    -- error "todo: Course.StateT pure#instance (Logger l)"
 
   (<*>) ::
     Logger l (a -> b)
     -> Logger l a
     -> Logger l b
-  (<*>) =
-    error "todo: Course.StateT (<*>)#instance (Logger l)"
+  (<*>) (Logger l1 f) (Logger l2 u) = Logger (l1 ++ l2) (f u)
+    -- error "todo: Course.StateT (<*>)#instance (Logger l)"
 
 -- | Implement the `Monad` instance for `Logger`.
 -- The `bind` implementation must append log values to maintain associativity.
@@ -350,8 +377,11 @@ instance Monad (Logger l) where
     (a -> Logger l b)
     -> Logger l a
     -> Logger l b
-  (=<<) =
-    error "todo: Course.StateT (=<<)#instance (Logger l)"
+  (=<<) f (Logger l1 it ) = let (Logger l2 rr) = f it
+    in 
+      Logger (l1 ++ l2) rr 
+
+    -- error "todo: Course.StateT (=<<)#instance (Logger l)"
 
 -- | A utility function for producing a `Logger` with one log value.
 --
@@ -361,8 +391,8 @@ log1 ::
   l
   -> a
   -> Logger l a
-log1 =
-  error "todo: Course.StateT#log1"
+log1 v it = Logger (v :. Nil) it 
+  -- error "todo: Course.StateT#log1"
 
 -- | Remove all duplicate integers from a list. Produce a log as you go.
 -- If there is an element above 100, then abort the entire computation and produce no result.
@@ -382,8 +412,28 @@ distinctG ::
   (Integral a, Show a) =>
   List a
   -> Logger Chars (Optional (List a))
-distinctG =
-  error "todo: Course.StateT#distinctG"
+distinctG z =       runOptionalT (evalT (filtering (\a -> StateT (\s ->
+  OptionalT (if a > 100
+               then
+                 log1 (fromString ("aborting > 100: " P.++ show a)) Empty
+               else (if even a
+                 then log1 (fromString ("even number: " P.++ show a))
+                 else pure) (Full (a `S.notMember` s, a `S.insert` s))))) z) S.empty)
+
+
+
+-- plain wrong , edit to fix
+-- runOptionalT $ evalT (filtering (\x -> StateT $ \ (s, ll :: Chars) -> 
+--   if (x > 100)
+--     then 
+--       OptionalT $ Logger ( "aborting > 100" :. ll) Empty
+--   else if (even x)
+--     then
+--       OptionalT $ Logger ll (Full (S.notMember x s, ( S.insert x s ,"even" :. ll) ))
+--   else 
+--     OptionalT $ Logger ll (Full (S.notMember x s, ( S.insert x s ,ll) ) ) )  z  ) (S.empty , Nil :: Chars )
+
+  -- error "todo: Course.StateT#distinctG"
 
 onFull ::
   Applicative f =>
