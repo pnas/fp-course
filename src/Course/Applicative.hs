@@ -76,8 +76,10 @@ instance Applicative List where
     List (a -> b)
     -> List a
     -> List b
-  (<*>) ( f :. Nil ) Nil = Nil
-  (<*>) ( f :. Nil ) ( h :. t ) = ( f h :. ( pure f <*> t ) )
+  (<*>) Nil _ = Nil
+  (<*>) ( _ :. (_ :. _) ) Nil = Nil
+  (<*>) ( _ :. Nil ) Nil = Nil
+  (<*>) ( f :. Nil ) ( h :. t ) = f h :. ( pure f <*> t )
   (<*>) ( f :. y ) ( h :. t ) = ( f h :. ( pure f <*> t ) ) ++ ( y <*> ( h :. t ) )
 
     -- error "todo: Course.Apply (<*>)#instance List"
