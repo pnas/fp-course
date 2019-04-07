@@ -171,7 +171,7 @@ valueParser r = P ( \ i -> Result i r)
   -> Parser a
   -> Parser a
 (|||) (P ft) (P sd) = P ( \ i -> case ft i of 
-                                  Result i r -> Result i r
+                                  Result u r -> Result u r
                                   _ -> sd i )
   -- error "todo: Course.Parser#(|||)"
 
@@ -255,7 +255,8 @@ satisfy p = P ( \ i -> case isEmpty i of
 -- /Tip:/ Use the @satisfy@ function.
 is ::
   Char -> Parser Char
-is c = P ( \ i -> parse ( ( \ x -> satisfy ( \ z -> z == c) ) =<< character ) i )
+is c = P ( \ i -> parse ( satisfy (\x -> x == c) ) i )
+-- is = satisfy . (==)
   -- error "todo: Course.Parser#is"
 
 -- | Return a parser that produces a character between '0' and '9' but fails if
@@ -267,7 +268,7 @@ is c = P ( \ i -> parse ( ( \ x -> satisfy ( \ z -> z == c) ) =<< character ) i 
 -- /Tip:/ Use the @satisfy@ and @Data.Char#isDigit@ functions.
 digit ::
   Parser Char
-digit =  P ( \ i -> parse ( ( \ x -> satisfy ( \ z -> isDigit z ) ) =<< character ) i )
+digit =  P ( \ i -> parse ( satisfy ( \ z -> isDigit z ) ) i )
   -- error "todo: Course.Parser#digit"
 
 --
@@ -280,7 +281,7 @@ digit =  P ( \ i -> parse ( ( \ x -> satisfy ( \ z -> isDigit z ) ) =<< characte
 -- /Tip:/ Use the @satisfy@ and @Data.Char#isSpace@ functions.
 space ::
   Parser Char
-space =  P ( \ i -> parse ( ( \ x -> satisfy ( \ z -> isSpace z ) ) =<< character ) i )
+space =  P ( \ i -> parse ( satisfy ( \ z -> isSpace z ) ) i )
   -- error "todo: Course.Parser#space"
 
 -- | Return a parser that continues producing a list of values from the given parser.
@@ -307,9 +308,13 @@ space =  P ( \ i -> parse ( ( \ x -> satisfy ( \ z -> isSpace z ) ) =<< characte
 list ::
   Parser a
   -> Parser (List a)
-list (P t) =
-  error "todo: Course.Parser#list"
+list k = 
+  list1 k ||| valueParser Nil
+-- list (P t) =
   -- P ( \ i -> onResult (t i) (\ x y -> y :. (parse (list t) x) ) )
+
+-- error "todo: Course.Parser#list"
+-- 
 -- | Return a parser that produces at least one value from the given parser then
 -- continues producing a list of values from the given parser (to ultimately produce a non-empty list).
 --
@@ -326,8 +331,12 @@ list (P t) =
 list1 ::
   Parser a
   -> Parser (List a)
-list1 =
-  error "todo: Course.Parser#list1"
+list1 k =
+  k >>= \k' ->
+  list k >>= \ks ->
+  pure (k' :. ks)
+
+  -- error "todo: Course.Parser#list1"
 
 -- | Return a parser that produces one or more space characters
 -- (consuming until the first non-space) but fails if
@@ -340,7 +349,8 @@ list1 =
 spaces1 ::
   Parser Chars
 spaces1 =
-  error "todo: Course.Parser#spaces1"
+  list1 space
+  -- error "todo: Course.Parser#spaces1"
 
 -- | Return a parser that produces a lower-case character but fails if
 --
@@ -352,7 +362,8 @@ spaces1 =
 lower ::
   Parser Char
 lower =
-  error "todo: Course.Parser#lower"
+  satisfy isLower
+  -- error "todo: Course.Parser#lower"
 
 -- | Return a parser that produces an upper-case character but fails if
 --
@@ -364,7 +375,8 @@ lower =
 upper ::
   Parser Char
 upper =
-  error "todo: Course.Parser#upper"
+  satisfy isUpper
+  -- error "todo: Course.Parser#upper"
 
 -- | Return a parser that produces an alpha character but fails if
 --
@@ -376,7 +388,8 @@ upper =
 alpha ::
   Parser Char
 alpha =
-  error "todo: Course.Parser#alpha"
+  satisfy isAlpha
+  --  error "todo: Course.Parser#alpha"
 
 -- | Return a parser that sequences the given list of parsers by producing all their results
 -- but fails on the first failing parser of the list.
@@ -392,8 +405,12 @@ alpha =
 sequenceParser ::
   List (Parser a)
   -> Parser (List a)
-sequenceParser =
-  error "todo: Course.Parser#sequenceParser"
+sequenceParser Nil = valueParser Nil
+sequenceParser (p1 :. pt) = 
+  ( \ l -> ( \lt -> pure (l :. lt) ) =<< sequenceParser pt ) =<< p1
+  -- P ( \i -> parse ( ( \ l -> ( \lt -> pure (l :. lt) ) =<< sequenceParser pt) =<< p1) i )
+
+  -- error "todo: Course.Parser#sequenceParser"
 
 -- | Return a parser that produces the given number of values off the given parser.
 -- This parser fails if the given parser fails in the attempt to produce the given number of values.
