@@ -408,6 +408,7 @@ sequenceParser ::
 sequenceParser Nil = valueParser Nil
 sequenceParser (p1 :. pt) = 
   ( \ l -> ( \lt -> pure (l :. lt) ) =<< sequenceParser pt ) =<< p1
+
   -- P ( \i -> parse ( ( \ l -> ( \lt -> pure (l :. lt) ) =<< sequenceParser pt) =<< p1) i )
 
   -- error "todo: Course.Parser#sequenceParser"
@@ -426,8 +427,8 @@ thisMany ::
   Int
   -> Parser a
   -> Parser (List a)
-thisMany =
-  error "todo: Course.Parser#thisMany"
+thisMany n p1 = sequenceParser ( replicate n p1 )
+  -- error "todo: Course.Parser#thisMany"
 
 -- | This one is done for you.
 --
@@ -460,7 +461,8 @@ ageParser =
 firstNameParser ::
   Parser Chars
 firstNameParser =
-  error "todo: Course.Parser#firstNameParser"
+  ( \x -> (\z -> pure (x :. z)) =<< list lower ) =<< upper
+  -- error "todo: Course.Parser#firstNameParser"
 
 -- | Write a parser for Person.surname.
 --
@@ -482,7 +484,11 @@ firstNameParser =
 surnameParser ::
   Parser Chars
 surnameParser =
-  error "todo: Course.Parser#surnameParser"
+  ( \x -> 
+    (\z ->  
+     (\ y -> pure ( (x :. z) ++ y ) ) =<< list lower ) =<< (thisMany 5 lower) ) =<< upper
+
+  -- error "todo: Course.Parser#surnameParser"
 
 -- | Write a parser for Person.smoker.
 --
@@ -501,7 +507,9 @@ surnameParser =
 smokerParser ::
   Parser Bool
 smokerParser =
-  error "todo: Course.Parser#smokerParser"
+  ( \ z -> pure (z == 'y') ) =<< (is 'y') ||| (is 'n')
+
+  -- error "todo: Course.Parser#smokerParser"
 
 -- | Write part of a parser for Person#phoneBody.
 -- This parser will only produce a string of digits, dots or hyphens.
@@ -523,7 +531,8 @@ smokerParser =
 phoneBodyParser ::
   Parser Chars
 phoneBodyParser =
-  error "todo: Course.Parser#phoneBodyParser"
+  list (digit ||| is '-' ||| is '.')
+  -- error "todo: Course.Parser#phoneBodyParser"
 
 -- | Write a parser for Person.phone.
 --
@@ -545,7 +554,9 @@ phoneBodyParser =
 phoneParser ::
   Parser Chars
 phoneParser =
-  error "todo: Course.Parser#phoneParser"
+  ( \x -> ( \y -> ( \_ -> pure (x :. y)) =<< is '#' ) =<< phoneBodyParser ) =<< digit
+
+  -- error "todo: Course.Parser#phoneParser"
 
 -- | Write a parser for Person.
 --
@@ -599,7 +610,18 @@ phoneParser =
 personParser ::
   Parser Person
 personParser =
-  error "todo: Course.Parser#personParser"
+  (\ a -> 
+    ( \ f -> 
+      ( \l -> 
+        ( \s -> 
+          ( \p -> pure (Person a f l s p ) ) 
+          =<< phoneParser <* spaces1 ) 
+          =<< smokerParser <* spaces1 ) 
+          =<< surnameParser <* spaces1 ) 
+          =<< firstNameParser <* spaces1 ) 
+          =<< ageParser
+
+  -- error "todo: Course.Parser#personParser"
 
 -- Make sure all the tests pass!
 
