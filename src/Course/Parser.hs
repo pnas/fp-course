@@ -220,7 +220,9 @@ instance Applicative Parser where
     Parser (a -> b)
     -> Parser a
     -> Parser b
-  (<*>) f p1 = P ( \i -> parse ( (\ y -> (( \ x -> x y ) <$> f ) ) =<< p1 ) i  )
+  (<*>) f p1 = 
+    ( \x -> ( \y -> pure ( x y )) =<< p1 ) =<< f
+    -- P ( \i -> parse ( (\ y -> (( \ x -> x y ) <$> f ) ) =<< p1 ) i  )
 
   -- error "todo: Course.Parser (<*>)#instance Parser"
 
@@ -240,10 +242,14 @@ instance Applicative Parser where
 satisfy ::
   (Char -> Bool)
   -> Parser Char
-satisfy p = P ( \ i -> case isEmpty i of 
+satisfy p = 
+  P ( \ i -> case isEmpty i of 
                          True -> UnexpectedEof
-                         False -> parse ( ( \x -> if p x then valueParser x else unexpectedCharParser x)  =<< character ) i ) 
+                         False -> parse ( ( \x -> if p x 
+                          then valueParser x 
+                          else unexpectedCharParser x)  =<< character ) i ) 
 
+  -- character >>= lift3 bool unexpectedCharParser valueParser p
   -- error "todo: Course.Parser#satisfy"
 
 -- | Return a parser that produces the given character but fails if
@@ -255,7 +261,8 @@ satisfy p = P ( \ i -> case isEmpty i of
 -- /Tip:/ Use the @satisfy@ function.
 is ::
   Char -> Parser Char
-is c = P ( \ i -> parse ( satisfy (\x -> x == c) ) i )
+is c = 
+  P ( \ i -> parse ( satisfy (\x -> x == c) ) i )
 -- is = satisfy . (==)
   -- error "todo: Course.Parser#is"
 

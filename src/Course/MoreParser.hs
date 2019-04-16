@@ -40,8 +40,8 @@ P p <.> i =
 -- Result >abc< ""
 spaces ::
   Parser Chars
-spaces =
-  error "todo: Course.MoreParser#spaces"
+spaces = list space
+  -- error "todo: Course.MoreParser#spaces"
 
 -- | Write a function that applies the given parser, then parses 0 or more spaces,
 -- then produces the result of the original parser.
@@ -56,8 +56,9 @@ spaces =
 tok ::
   Parser a
   -> Parser a
-tok =
-  error "todo: Course.MoreParser#tok"
+tok pa =
+  (\x -> ( \ _ -> pure x ) =<< spaces ) =<< pa
+  -- error "todo: Course.MoreParser#tok"
 
 -- | Write a function that parses the given char followed by 0 or more spaces.
 --
@@ -72,7 +73,8 @@ charTok ::
   Char
   -> Parser Char
 charTok =
-  error "todo: Course.MoreParser#charTok"
+  tok . is 
+  -- error "todo: Course.MoreParser#charTok"
 
 -- | Write a parser that parses a comma ',' followed by 0 or more spaces.
 --
@@ -86,7 +88,8 @@ charTok =
 commaTok ::
   Parser Char
 commaTok =
-  error "todo: Course.MoreParser#commaTok"
+  charTok ','
+  -- error "todo: Course.MoreParser#commaTok"
 
 -- | Write a parser that parses either a double-quote or a single-quote.
 --
@@ -103,7 +106,8 @@ commaTok =
 quote ::
   Parser Char
 quote =
-  error "todo: Course.MoreParser#quote"
+  is '\'' ||| is '"'
+  -- error "todo: Course.MoreParser#quote"
 
 -- | Write a function that parses the given string (fails otherwise).
 --
@@ -117,8 +121,10 @@ quote =
 string ::
   Chars
   -> Parser Chars
-string =
-  error "todo: Course.MoreParser#string"
+string ll =
+  traverse is ll
+  
+-- error "todo: Course.MoreParser#string"
 
 -- | Write a function that parses the given string, followed by 0 or more spaces.
 --
@@ -133,7 +139,8 @@ stringTok ::
   Chars
   -> Parser Chars
 stringTok =
-  error "todo: Course.MoreParser#stringTok"
+  tok . string 
+  -- error "todo: Course.MoreParser#stringTok"
 
 -- | Write a function that tries the given parser, otherwise succeeds by producing the given value.
 --
@@ -148,8 +155,9 @@ option ::
   a
   -> Parser a
   -> Parser a
-option =
-  error "todo: Course.MoreParser#option"
+option c p =
+  p ||| valueParser c
+  -- error "todo: Course.MoreParser#option"
 
 -- | Write a parser that parses 1 or more digits.
 --
@@ -163,7 +171,8 @@ option =
 digits1 ::
   Parser Chars
 digits1 =
-  error "todo: Course.MoreParser#digits1"
+  list1 digit
+  -- error "todo: Course.MoreParser#digits1"
 
 -- | Write a function that parses one of the characters in the given string.
 --
@@ -177,8 +186,9 @@ digits1 =
 oneof ::
   Chars
   -> Parser Char
-oneof =
-  error "todo: Course.MoreParser#oneof"
+oneof ll =
+  satisfy ( \x -> elem x ll)
+  -- error "todo: Course.MoreParser#oneof"
 
 -- | Write a function that parses any character, but fails if it is in the given string.
 --
@@ -192,8 +202,9 @@ oneof =
 noneof ::
   Chars
   -> Parser Char
-noneof =
-  error "todo: Course.MoreParser#noneof"
+noneof ll =
+  satisfy ( \x -> notElem x ll)
+  -- error "todo: Course.MoreParser#noneof"
 
 -- | Write a function that applies the first parser, runs the third parser keeping the result,
 -- then runs the second parser and produces the obtained result.
