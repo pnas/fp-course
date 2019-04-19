@@ -411,7 +411,7 @@ distinctG ::
   (Integral a, Show a) =>
   List a
   -> Logger Chars (Optional (List a))
-distinctG z =       runOptionalT (evalT (filtering (\a -> StateT (\s ->
+distinctG z = runOptionalT (evalT (filtering (\a -> StateT (\s ->
   OptionalT (if a > 100
                then
                  log1 (fromString ("aborting > 100: " P.++ show a)) Empty

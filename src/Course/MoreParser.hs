@@ -227,8 +227,12 @@ between ::
   -> Parser c
   -> Parser a
   -> Parser a
-between =
-  error "todo: Course.MoreParser#between"
+between p1 p2 p3 = do 
+  _ <- p1
+  o3 <- p3
+  _ <- p2
+  pure o3
+  -- error "todo: Course.MoreParser#between"
 
 -- | Write a function that applies the given parser in between the two given characters.
 --
@@ -250,8 +254,9 @@ betweenCharTok ::
   -> Char
   -> Parser a
   -> Parser a
-betweenCharTok =
-  error "todo: Course.MoreParser#betweenCharTok"
+betweenCharTok c1 c2 p1 =
+  between (charTok c1) (charTok c2) p1
+  -- error "todo: Course.MoreParser#betweenCharTok"
 
 -- | Write a function that parses 4 hex digits and return the character value.
 --
@@ -271,7 +276,17 @@ betweenCharTok =
 hex ::
   Parser Char
 hex =
-  error "todo: Course.MoreParser#hex"
+    let dp i = case ( readHex i ) of 
+                 Full t -> pure (chr t)
+                 Empty -> unexpectedCharParser '0'
+    in ( \ c -> dp c ) =<< ( replicateA 4 (satisfy isHexDigit ) )
+
+--     let dp s = case readHex s of
+--       Empty -> 0
+--       Full n -> n
+-- in chr . hInt <$> replicateA 4 (satisfy isHexDigit) 
+
+  -- error "todo: Course.MoreParser#hex"
 
 -- | Write a function that parses the character 'u' followed by 4 hex digits and return the character value.
 --
@@ -294,7 +309,7 @@ hex =
 hexu ::
   Parser Char
 hexu =
-  error "todo: Course.MoreParser#hexu"
+  ( \_ -> hex ) =<< is 'u'
 
 -- | Write a function that produces a non-empty list of values coming off the given parser (which must succeed at least once),
 -- separated by the second given parser.
@@ -316,8 +331,15 @@ sepby1 ::
   Parser a
   -> Parser s
   -> Parser (List a)
-sepby1 =
-  error "todo: Course.MoreParser#sepby1"
+sepby1 p1 p2 = 
+  ( \x -> (\y -> pure ( x :. y) ) =<< list ( p2 *> p1) ) =<< p1 
+
+  -- do 
+  -- x <- p1
+  -- y <- list (p2 *> p1)
+  -- pure ( x :. y ) 
+
+  -- error "todo: Course.MoreParser#sepby1"
 
 -- | Write a function that produces a list of values coming off the given parser,
 -- separated by the second given parser.
@@ -339,8 +361,10 @@ sepby ::
   Parser a
   -> Parser s
   -> Parser (List a)
-sepby =
-  error "todo: Course.MoreParser#sepby"
+sepby p1 p2 =
+  sepby1 p1 p2 ||| pure Nil
+  
+  -- error "todo: Course.MoreParser#sepby"
 
 -- | Write a parser that asserts that there is no remaining input.
 --
@@ -352,7 +376,12 @@ sepby =
 eof ::
   Parser ()
 eof =
-  error "todo: Course.MoreParser#eof"
+  P (\i -> case isEmpty i of 
+             True -> Result Nil () 
+             False -> ExpectedEof i
+    )
+
+-- error "todo: Course.MoreParser#eof"
 
 -- | Write a parser that produces a character that satisfies all of the given predicates.
 --
@@ -375,8 +404,20 @@ eof =
 satisfyAll ::
   List (Char -> Bool)
   -> Parser Char
-satisfyAll =
-  error "todo: Course.MoreParser#satisfyAll"
+satisfyAll pl = do
+  c <- character
+  case and ( sequence pl c) of 
+    True -> pure c
+    False -> unexpectedCharParser c
+
+  -- ( \x -> and (sequence p1 ) ) =<< character
+  -- sequence ((satisfy h) :. satisfyAll p1)
+
+
+  -- sequenceParser (p1 :. pt) = 
+  --   ( \ l -> ( \lt -> pure (l :. lt) ) =<< sequenceParser pt ) =<< p1
+
+-- error "todo: Course.MoreParser#satisfyAll"
 
 -- | Write a parser that produces a character that satisfies any of the given predicates.
 --
@@ -396,8 +437,12 @@ satisfyAll =
 satisfyAny ::
   List (Char -> Bool)
   -> Parser Char
-satisfyAny =
-  error "todo: Course.MoreParser#satisfyAny"
+satisfyAny pl = do
+  c <- character
+  case or ( sequence pl c) of 
+    True -> pure c
+    False -> unexpectedCharParser c
+  -- error "todo: Course.MoreParser#satisfyAny"
 
 -- | Write a parser that parses between the two given characters, separated by a comma character ','.
 --
@@ -434,5 +479,7 @@ betweenSepbyComma ::
   -> Char
   -> Parser a
   -> Parser (List a)
-betweenSepbyComma =
-  error "todo: Course.MoreParser#betweenSepbyComma"
+betweenSepbyComma s1 s2 p1 = 
+   betweenCharTok s1 s2 $ sepby p1 (charTok ',')
+
+  -- error "todo: Course.MoreParser#betweenSepbyComma"

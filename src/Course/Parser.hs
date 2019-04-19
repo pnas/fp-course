@@ -319,7 +319,6 @@ list k =
   list1 k ||| valueParser Nil
 -- list (P t) =
   -- P ( \ i -> onResult (t i) (\ x y -> y :. (parse (list t) x) ) )
-
 -- error "todo: Course.Parser#list"
 -- 
 -- | Return a parser that produces at least one value from the given parser then

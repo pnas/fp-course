@@ -30,7 +30,7 @@ infixr 1 <<=
 -- ExactlyOne (ExactlyOne 7)
 instance Extend ExactlyOne where
   (<<=) ::
-    (ExactlyOne a -> b)
+    ( (ExactlyOne a) -> b)
     -> ExactlyOne a
     -> ExactlyOne b
   (<<=) f ea = ExactlyOne $ f ea
