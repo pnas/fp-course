@@ -26,8 +26,8 @@ vooid =
   m a
   -> m b
   -> m b
-(>-) a =
-  (>>=) a . const
+(>-) x =
+  (>>=) x. const
 
 -- | Runs an action until a result of that action satisfies a given predicate.
 untilM ::
@@ -83,7 +83,12 @@ data Op =
 convertInteractive ::
   IO ()
 convertInteractive =
-  error "todo: Course.Interactive#convertInteractive"
+  putStr "Enter a lower case string to convert to UPPER CASE : " >-
+           getLine >>= \ll ->
+           putStr "You Entered : " >-
+           putStrLn (toUpper <$> ll) >-
+           pure ()
+  -- error "todo: Course.Interactive#convertInteractive"
 
 -- |
 --
@@ -110,9 +115,15 @@ convertInteractive =
 -- /Tip:/ @putStrLn :: String -> IO ()@ -- Prints a string and then a new line to standard output.
 reverseInteractive ::
   IO ()
-reverseInteractive =
-  error "todo: Course.Interactive#reverseInteractive"
+reverseInteractive = do 
+  putStrLn "Please enter the input filename : "
+  inf <- getLine
+  putStrLn "Please enter the output filename : "
+  otf <- getLine
+  ifp <- readFile inf 
+  writeFile otf (reverse ifp)
 
+-- error "todo: Course.Interactive#reverseInteractive"
 -- |
 --
 -- * Ask the user to enter a string to url-encode.
@@ -136,8 +147,34 @@ reverseInteractive =
 -- /Tip:/ @putStrLn :: String -> IO ()@ -- Prints a string and then a new line to standard output.
 encodeInteractive ::
   IO ()
-encodeInteractive =
-  error "todo: Course.Interactive#encodeInteractive"
+encodeInteractive = 
+  do 
+    putStrLn "Please enter a url to encode : "
+    iurl <- getLine
+    putStrLn (flatten $ encode <$> iurl)
+          where 
+            encode u = case u of 
+                        ' '  -> "%20"
+                        '\t' -> "%09"
+                        '"'  -> "%22"
+                        _    -> u :. Nil
+    
+  -- let encode ::
+  --       Chars
+  --       -> Chars
+  --     encode url =
+  --       url >>= \c -> case c of
+  --                       ' '  -> "%20"
+  --                       '\t' -> "%09"
+  --                       '"'  -> "%22"
+  --                       _    -> c :. Nil
+  -- in putStr "Enter a URL to encode: " >-
+  --    getLine >>= \l ->
+  --    putStrLn (encode l) >-
+  -- putStrLn ""
+
+  
+  -- error "todo: Course.Interactive#encodeInteractive"
 
 interactive ::
   IO ()
