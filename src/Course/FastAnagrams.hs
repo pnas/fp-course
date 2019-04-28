@@ -14,8 +14,13 @@ fastAnagrams ::
   Chars
   -> FilePath
   -> IO (List Chars)
-fastAnagrams =
-  error "todo: Course.FastAnagrams#fastAnagrams"
+fastAnagrams gs df =
+  ( \ ls -> compLines $ S.fromList (hlist $ lines ls) ) <$> readFile df
+  where 
+    pms = permutations gs
+    compLines l = filter ( \x -> S.member x l) pms
+  
+  -- error "todo: Course.FastAnagrams#fastAnagrams"
 
 newtype NoCaseString =
   NoCaseString {
